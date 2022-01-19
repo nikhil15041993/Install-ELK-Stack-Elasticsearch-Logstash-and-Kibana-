@@ -255,3 +255,6 @@ The output should read Enabled system.
 ```
 sudo filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]'
 ```
+
+
+.
