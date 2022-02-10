@@ -256,5 +256,44 @@ The output should read Enabled system.
 sudo filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]'
 ```
 
+## Download and install Filebeat on Remote machine
 
-.
+### Download and install Filebeat
+
+
+```
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.17.0-amd64.deb
+sudo dpkg -i filebeat-7.17.0-amd64.deb
+```
+
+### Edit the configuration
+
+Modify /etc/filebeat/filebeat.yml to set the connection information:
+
+```
+output.elasticsearch:
+  hosts: ["<es_url>"]
+  username: "elastic"
+  password: "<password>"
+setup.kibana:
+  host: "<kibana_url>"
+  
+```
+Where password is the password of the elastic user, <es_url> is the URL of Elasticsearch, and <kibana_url> is the URL of Kibana
+
+### enable and configure the  module
+
+```
+sudo filebeat modules enable <module name>
+```
+
+Modify the settings in the /etc/filebeat/modules.d/apache.yml file.
+   
+### Start Filebeat
+
+The setup command loads the Kibana dashboards. If the dashboards are already set up, omit this command.
+
+```
+sudo filebeat setup
+sudo service filebeat start   
+```   
