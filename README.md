@@ -297,3 +297,5 @@ The setup command loads the Kibana dashboards. If the dashboards are already set
 sudo filebeat setup
 sudo service filebeat start   
 ```   
+
+To test the filebeat connection use ``` sudo filebeat test output ```
