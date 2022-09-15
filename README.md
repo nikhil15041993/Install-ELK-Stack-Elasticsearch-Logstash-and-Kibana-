@@ -299,3 +299,209 @@ sudo service filebeat start
 ```   
 
 To test the filebeat connection use ``` sudo filebeat test output ```
+
+
+## Enable user authentication
+
+Install the required packages.
+
+
+```
+apt-get update
+apt-get install curl mlocate jq
+```
+Test your communication with the ElasticSearch server.
+
+
+```
+curl -X GET "http://192.168.100.7:9200/_xpack/license"
+```
+
+Here is the command output.
+
+```
+Copy to Clipboard
+{
+  "name" : "elasticsearch.local",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "w5CUwsjPQPqW4Ne_04wuRg",
+  "version" : {
+    "number" : "7.6.2",
+    "build_flavor" : "default",
+    "build_type" : "deb",
+    "build_hash" : "ef48eb35cf30adf4db14086e8aabd07ef6fb113f",
+    "build_date" : "2020-03-26T06:34:37.794943Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.4.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+Verify the license installed on the ElasticSearch server.
+
+```
+curl -X GET "http://192.168.100.7:9200/_xpack/license"
+```
+Here is the command output.
+
+```
+{
+  "license" : {
+    "status" : "active",
+    "uid" : "9f3d50e7-4d3c-47ec-8011-6f6b1d1167c0",
+    "type" : "basic",
+    "issue_date" : "2020-04-22T00:46:28.831Z",
+    "issue_date_in_millis" : 1587516388831,
+    "max_nodes" : 1000,
+    "issued_to" : "elasticsearch",
+    "issuer" : "elasticsearch",
+    "start_date_in_millis" : -1
+  }
+}
+```
+
+In our example, we have a basic license installed on the ElasticSearch server.
+
+Enable the trial license on the ElasticSearch server.
+
+```
+curl -X POST "http://192.168.100.7:9200/_license/start_trial?acknowledge=true&pretty"
+```
+
+Here is the command output.
+
+```
+{
+  "acknowledged": true,
+  "trial_was_started": true,
+  "type": "trial"
+}
+```
+Verify the license installed on the ElasticSearch server.
+
+```
+
+curl -X GET "http://192.168.100.7:9200/_xpack/license"
+```
+The user authentication is not available on the ElasticSearch basic license.
+
+Tutorial ElasticSearch - Configure the user authentication
+Stop the ElasticSearch service.
+
+```
+systemctl stop elasticsearch
+```
+Edit the ElasticSearch configuration file named: elasticsearch.yml
+
+```
+vi /etc/elasticsearch/elasticsearch.yml
+```
+Add the following lines at the end of the file.
+
+```
+xpack.security.enabled: true
+```
+Here is the original file, before our configuration.
+
+
+Start the ElasticSearch service.
+
+```
+systemctl start elasticsearch
+```
+Test your communication with the ElasticSearch server.
+
+```
+curl -X GET "http://192.168.100.7:9200/?pretty"
+```
+Here is the command output.
+
+```
+{
+  "error" : {
+    "root_cause" : [
+      {
+        "type" : "security_exception",
+        "reason" : "missing authentication credentials for REST request [/?pretty]",
+        "header" : {
+          "WWW-Authenticate" : "Basic realm=\"security\" charset=\"UTF-8\""
+        }
+      }
+    ],
+    "type" : "security_exception",
+    "reason" : "missing authentication credentials for REST request [/?pretty]",
+    "header" : {
+      "WWW-Authenticate" : "Basic realm=\"security\" charset=\"UTF-8\""
+    }
+  },
+  "status" : 401
+}
+```
+The ElasticSearch server is requiring user authentication.
+
+Set the password for the ElasticSearch internal accounts.
+
+```
+/usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive
+```
+Here is the command output.
+
+```
+Initiating the setup of passwords for reserved users elastic,apm_system,kibana,logstash_system,beats_system,remote_monitoring_user.
+You will be prompted to enter passwords as the process progresses.
+Please confirm that you would like to continue [y/N]y
+​
+​
+Enter password for [elastic]:
+Reenter password for [elastic]:
+Enter password for [apm_system]:
+Reenter password for [apm_system]:
+Enter password for [kibana]:
+Reenter password for [kibana]:
+Enter password for [logstash_system]:
+Reenter password for [logstash_system]:
+Enter password for [beats_system]:
+Reenter password for [beats_system]:
+Enter password for [remote_monitoring_user]:
+Reenter password for [remote_monitoring_user]:
+Changed password for user [apm_system]
+Changed password for user [kibana]
+Changed password for user [logstash_system]
+Changed password for user [beats_system]
+Changed password for user [remote_monitoring_user]
+Changed password for user [elastic]
+```
+Test your communication with the ElasticSearch server using the ELASTIC user account.
+
+```
+curl --user elastic -X GET "http://192.168.100.7:9200/?pretty"
+
+```
+Here is the command output.
+
+```
+{
+  "name" : "elasticsearch.local",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "w5CUwsjPQPqW4Ne_04wuRg",
+  "version" : {
+    "number" : "7.6.2",
+    "build_flavor" : "default",
+    "build_type" : "deb",
+    "build_hash" : "ef48eb35cf30adf4db14086e8aabd07ef6fb113f",
+    "build_date" : "2020-03-26T06:34:37.794943Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.4.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+You may choose to enter the user password on the command-line.
+
+```
+curl --user elastic:elastic123 -X GET "http://192.168.100.7:9200/?pretty"
+```
